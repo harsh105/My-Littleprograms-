@@ -65,3 +65,18 @@ private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy, Strin
                 }
             }
         }
+===========
+private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy, String indent) {
+        hierarchy.append(indent).append(method.getSimpleName()).append("\n");
+
+        CtClass<?> declaringClass = method.getDeclaringClass();
+        if (declaringClass != null) {
+            CtClass<?> superClass = declaringClass.getSuperclass();
+            if (superClass != null) {
+                for (CtMethod<?> parentMethod : superClass.getMethodsByName(method.getSimpleName())) {
+                    if (parentMethod.getSignature().equals(method.getSignature())) {
+                        collectHierarchy(parentMethod, hierarchy, indent + "\t");
+                    }
+                }
+            }
+        }
