@@ -94,3 +94,21 @@ private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy, Strin
         }
     }
 }
+===========
+
+
+private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy) {
+    CtClass<?> declaringClass = method.getDeclaringType();
+
+    if (declaringClass != null) {
+        CtMethod<?>[] methods = declaringClass.getAllMethods();
+
+        for (CtMethod<?> parentMethod : methods) {
+            if (parentMethod.getReference().equals(method.getReference())) {
+                hierarchy.insert(0, parentMethod.getSignature() + "\n");
+                collectHierarchy(parentMethod, hierarchy);
+                break;
+            }
+        }
+    }
+}
