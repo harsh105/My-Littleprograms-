@@ -1,15 +1,23 @@
 private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy) {
-    CtClass<?> declaringClass = method.getDeclaringType();
+    Queue<CtMethod<?>> queue = new LinkedList<>();
+    Set<CtMethod<?>> visited = new HashSet<>();
 
-    if (declaringClass != null) {
-        Set<CtMethod<?>> methods = declaringClass.getAllMethods();
-        CtMethod<?>[] methodArray = methods.toArray(new CtMethod<?>[methods.size()]);
+    queue.add(method);
+    visited.add(method);
 
-        for (CtMethod<?> parentMethod : methodArray) {
-            if (parentMethod.getReference().equals(method.getReference())) {
-                hierarchy.insert(0, parentMethod.getSignature() + "\n");
-                collectHierarchy(parentMethod, hierarchy);
-                break;
+    while (!queue.isEmpty()) {
+        CtMethod<?> currentMethod = queue.poll();
+        hierarchy.append(currentMethod.getSignature()).append("\n");
+
+        CtClass<?> declaringClass = currentMethod.getDeclaringType();
+        if (declaringClass != null) {
+            Set<CtMethod<?>> methods = declaringClass.getAllMethods();
+
+            for (CtMethod<?> parentMethod : methods) {
+                if (!visited.contains(parentMethod) && parentMethod.getReference().equals(currentMethod.getReference())) {
+                    queue.add(parentMethod);
+                    visited.add(parentMethod);
+                }
             }
         }
     }
