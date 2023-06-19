@@ -49,3 +49,19 @@ public class MethodHierarchyController {
         }
     }
 }
+
+≠=========
+private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy, String indent) {
+        hierarchy.append(indent).append(method.getSimpleName()).append("\n");
+
+        CtType<?> declaringType = method.getDeclaringType();
+        if (declaringType != null) {
+            for (CtMethod<?> parentMethod : declaringType.getAllMethods()) {
+                CtExecutableReference<?> parentMethodRef = parentMethod.getReference();
+                CtExecutableReference<?> methodRef = method.getReference();
+
+                if (parentMethodRef.overrides(methodRef)) {
+                    collectHierarchy(parentMethod, hierarchy, indent + "\t");
+                }
+            }
+        }
