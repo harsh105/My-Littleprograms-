@@ -2,7 +2,10 @@ private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy) {
     CtClass<?> declaringClass = method.getDeclaringType();
 
     if (declaringClass != null) {
-        CtMethod<?> parentMethod = findParentMethod(declaringClass, method);
+        Set<CtMethod<?>> methods = declaringClass.getAllMethods();
+        CtMethod<?>[] methodArray = methods.toArray(new CtMethod<?>[methods.size()]);
+
+        CtMethod<?> parentMethod = findParentMethod(methodArray, method);
         if (parentMethod != null) {
             collectHierarchy(parentMethod, hierarchy);
         }
@@ -11,9 +14,7 @@ private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy) {
     hierarchy.append(method.getSignature()).append("\n");
 }
 
-private CtMethod<?> findParentMethod(CtClass<?> declaringClass, CtMethod<?> method) {
-    CtMethod<?>[] methods = declaringClass.getAllMethods();
-
+private CtMethod<?> findParentMethod(CtMethod<?>[] methods, CtMethod<?> method) {
     for (CtMethod<?> parentMethod : methods) {
         if (parentMethod.getReference().equals(method.getReference())) {
             return parentMethod;
