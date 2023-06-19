@@ -1,25 +1,26 @@
 private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy) {
-    CtClass<?> declaringClass = method.getDeclaringType();
+    Deque<CtMethod<?>> stack = new ArrayDeque<>();
+    Set<CtMethod<?>> visited = new HashSet<>();
 
-    if (declaringClass != null) {
-        Set<CtMethod<?>> methods = declaringClass.getAllMethods();
-        CtMethod<?>[] methodArray = methods.toArray(new CtMethod<?>[methods.size()]);
+    stack.push(method);
 
-        CtMethod<?> parentMethod = findParentMethod(methodArray, method);
-        if (parentMethod != null) {
-            collectHierarchy(parentMethod, hierarchy);
+    while (!stack.isEmpty()) {
+        CtMethod<?> currentMethod = stack.pop();
+
+        if (!visited.contains(currentMethod)) {
+            hierarchy.append(currentMethod.getSignature()).append("\n");
+            visited.add(currentMethod);
+
+            CtClass<?> declaringClass = currentMethod.getDeclaringType();
+            if (declaringClass != null) {
+                Set<CtMethod<?>> methods = declaringClass.getAllMethods();
+
+                for (CtMethod<?> parentMethod : methods) {
+                    if (!visited.contains(parentMethod) && parentMethod.getReference().equals(currentMethod.getReference())) {
+                        stack.push(parentMethod);
+                    }
+                }
+            }
         }
     }
-
-    hierarchy.append(method.getSignature()).append("\n");
-}
-
-private CtMethod<?> findParentMethod(CtMethod<?>[] methods, CtMethod<?> method) {
-    for (CtMethod<?> parentMethod : methods) {
-        if (parentMethod.getReference().equals(method.getReference())) {
-            return parentMethod;
-        }
-    }
-
-    return null;
 }
