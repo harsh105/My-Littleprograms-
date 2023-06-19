@@ -1,12 +1,14 @@
-# My-Littleprograms-
-other then class
+#readme
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.visitor.filter.NameFilter;
+import spoon.reflect.declaration.CtType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class MethodHierarchyController {
@@ -37,8 +39,13 @@ public class MethodHierarchyController {
     private void collectHierarchy(CtMethod<?> method, StringBuilder hierarchy, String indent) {
         hierarchy.append(indent).append(method.getSimpleName()).append("\n");
 
-        method.getParent(new NameFilter<>(CtMethod.class)).forEach(parentMethod ->
-                collectHierarchy(parentMethod, hierarchy, indent + "\t")
-        );
+        CtType<?> declaringType = method.getDeclaringType();
+        if (declaringType != null) {
+            List<CtMethod<?>> parentMethods = new ArrayList<>();
+            parentMethods.addAll(declaringType.getAllMethods());
+            parentMethods.stream()
+                    .filter(parentMethod -> parentMethod.getReference().overrides(method.getReference()))
+                    .forEach(parentMethod -> collectHierarchy(parentMethod, hierarchy, indent + "\t"));
+        }
     }
 }
