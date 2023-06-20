@@ -1,3 +1,5 @@
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.dom.*;
 
@@ -18,23 +20,29 @@ public class MethodHierarchyController {
     ) {
         List<String> methodHierarchy = new ArrayList<>();
         try {
-            ICompilationUnit compilationUnit = JavaCore.createCompilationUnitFrom(className);
-            ASTParser parser = ASTParser.newParser(AST.JLS8);
-            parser.setKind(ASTParser.K_COMPILATION_UNIT);
-            parser.setSource(compilationUnit);
-            parser.setResolveBindings(true);
+            IJavaProject javaProject = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot());
+            IType type = javaProject.findType(className);
+            if (type != null) {
+                ICompilationUnit compilationUnit = type.getCompilationUnit();
+                if (compilationUnit != null) {
+                    ASTParser parser = ASTParser.newParser(AST.JLS8);
+                    parser.setKind(ASTParser.K_COMPILATION_UNIT);
+                    parser.setSource(compilationUnit);
+                    parser.setResolveBindings(true);
 
-            CompilationUnit astRoot = (CompilationUnit) parser.createAST(null);
-            astRoot.accept(new ASTVisitor() {
-                @Override
-                public boolean visit(MethodInvocation node) {
-                    IMethodBinding binding = node.resolveMethodBinding();
-                    if (binding != null && binding.getName().equals(methodName)) {
-                        methodHierarchy.add(binding.getDeclaringClass().getQualifiedName());
-                    }
-                    return super.visit(node);
+                    CompilationUnit astRoot = (CompilationUnit) parser.createAST(null);
+                    astRoot.accept(new ASTVisitor() {
+                        @Override
+                        public boolean visit(MethodInvocation node) {
+                            IMethodBinding binding = node.resolveMethodBinding();
+                            if (binding != null && binding.getName().equals(methodName)) {
+                                methodHierarchy.add(binding.getDeclaringClass().getQualifiedName());
+                            }
+                            return super.visit(node);
+                        }
+                    });
                 }
-            });
+            }
         } catch (JavaModelException e) {
             e.printStackTrace();
         }
