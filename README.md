@@ -20,15 +20,16 @@ public class MethodHierarchyController {
     ) {
         List<String> methodHierarchy = new ArrayList<>();
         try {
-            IJavaProject javaProject = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot());
+            IJavaProject javaProject = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot().getProject());
             IType type = javaProject.findType(className);
             if (type != null) {
                 ICompilationUnit compilationUnit = type.getCompilationUnit();
                 if (compilationUnit != null) {
-                    ASTParser parser = ASTParser.newParser(AST.JLS8);
+                    ASTParser parser = ASTParser.newParser(ASTParser.K_COMPILATION_UNIT);
                     parser.setKind(ASTParser.K_COMPILATION_UNIT);
                     parser.setSource(compilationUnit);
                     parser.setResolveBindings(true);
+                    parser.setCompilerOptions(JavaCore.getOptions()); // Set the compiler options to use project settings
 
                     CompilationUnit astRoot = (CompilationUnit) parser.createAST(null);
                     astRoot.accept(new ASTVisitor() {
