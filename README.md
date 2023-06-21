@@ -62,4 +62,13 @@ public class MethodHierarchyController {
         for (IJavaProject project : projects) {
             if (project.isOnClasspath(new Path(getApplicationClasspath()))) {
                 return project;
-           
+            }
+        }
+        return null; // Return null if the Java project is not found
+    }
+
+    private String getApplicationClasspath() {
+        // Replace this with the actual classpath of your Spring Boot application
+        return "/path/to/your/application/classpath";
+    }
+}
