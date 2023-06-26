@@ -1,74 +1,25 @@
-import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.dom.*;
+#!/bin/bash
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+directory_path="your/directory/path"  # Replace with the specific directory path
+keywords=("keyword1" "keyword2" "keyword3")  # Replace with the keywords you want to search
 
-import java.util.ArrayList;
-import java.util.List;
+output_file="output.txt"  # Specify the output file name
 
-@RestController
-public class MethodHierarchyController {
+# Check if the specified directory exists and is a directory
+if [ -d "$directory_path" ]; then
+    # Loop over each keyword
+    for keyword in "${keywords[@]}"; do
+        # Find all Java files in the directory
+        java_files=$(find "$directory_path" -type f -name "*.java")
 
-    @GetMapping("/methodHierarchy")
-    public List<String> getMethodHierarchy(
-            @RequestParam("methodName") String methodName,
-            @RequestParam("className") String className
-    ) {
-        List<String> methodHierarchy = new ArrayList<>();
-        try {
-            IJavaProject javaProject = findJavaProject();
-            if (javaProject != null) {
-                IType type = javaProject.findType(className);
-                if (type != null) {
-                    ICompilationUnit compilationUnit = type.getCompilationUnit();
-                    if (compilationUnit != null) {
-                        ASTParser parser = ASTParser.newParser(ASTParser.K_COMPILATION_UNIT);
-                        parser.setKind(ASTParser.K_COMPILATION_UNIT);
-                        parser.setSource(compilationUnit);
-                        parser.setResolveBindings(true);
-                        parser.setBindingsRecovery(true);
-                        parser.setEnvironment(
-                                new String[]{},
-                                new String[]{},
-                                new String[]{},
-                                true
-                        );
+        # Loop over each Java file
+        for file in $java_files; do
+            # Search for the keyword in the file and append matching lines to the output file
+            grep -H "$keyword" "$file" >> "$output_file"
+        done
+    done
 
-                        CompilationUnit astRoot = (CompilationUnit) parser.createAST(null);
-                        astRoot.accept(new ASTVisitor() {
-                            @Override
-                            public boolean visit(MethodInvocation node) {
-                                IMethodBinding binding = node.resolveMethodBinding();
-                                if (binding != null && binding.getName().equals(methodName)) {
-                                    methodHierarchy.add(binding.getDeclaringClass().getQualifiedName());
-                                }
-                                return super.visit(node);
-                            }
-                        });
-                    }
-                }
-            }
-        } catch (JavaModelException e) {
-            e.printStackTrace();
-        }
-        return methodHierarchy;
-    }
-
-    private IJavaProject findJavaProject() throws JavaModelException {
-        IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
-                .getJavaProjects();
-        for (IJavaProject project : projects) {
-            if (project.isOnClasspath(new Path(getApplicationClasspath()))) {
-                return project;
-            }
-        }
-        return null; // Return null if the Java project is not found
-    }
-
-    private String getApplicationClasspath() {
-        // Replace this with the actual classpath of your Spring Boot application
-        return "/path/to/your/application/classpath";
-    }
-}
+    echo "Search completed. Matching lines saved in $output_file."
+else
+    echo "The specified directory does not exist."
+fi
